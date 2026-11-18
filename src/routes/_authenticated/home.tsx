@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Bell, BellOff, Camera, Copy, Eraser, Heart, ImagePlus, Info, MessageCircle, Phone, PhoneMissed, PhoneOutgoing, Pin, PinOff, Plus, Search, Smartphone, Trash2, UserPlus, Users, X } from "lucide-react";
+import { ArrowLeft, Bell, BellOff, Camera, Clapperboard, Copy, Eraser, Heart, ImagePlus, Info, MessageCircle, Phone, PhoneMissed, PhoneOutgoing, Pin, PinOff, Plus, Search, Smartphone, Trash2, UserPlus, Users, X } from "lucide-react";
 import { useTypingWatch } from "@/lib/typing";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchLastMessages, fetchMe, fetchPairs, fetchStories, isOnline, presenceOf, shortTime, type Story } from "@/lib/fp";
@@ -194,6 +194,9 @@ function Home() {
       <nav className={`z-10 h-14 shrink-0 items-center justify-between border-t border-border bg-background px-4 ${idx === 0 ? "hidden" : "flex"}`}>
         <button aria-label={isOwner ? "Add partner" : "Contacts"} onClick={() => setSheet(true)} className="rounded-full p-2 text-primary">
           <Plus className="h-[22px] w-[22px]" />
+        </button>
+        <button aria-label="পারিবারিক কর্নার" onClick={() => navigate({ to: "/feed" })} className="rounded-full p-2 text-primary">
+          <Clapperboard className="h-[22px] w-[22px]" />
         </button>
         <button aria-label="Search" onClick={() => navigate({ to: "/search" })} className="rounded-full p-2 text-primary">
           <Search className="h-[22px] w-[22px]" />

@@ -18,3 +18,4 @@ The database already contains the full schema (profiles, pairs, messages, pair_c
 - Web device commands must pass the shared capability allowlist before queuing; unsupported commands show an unavailable state rather than pretending a native companion exists.
 - Standard interface typography uses the semantic `text-ui` token; emoji, branding and story content retain their own display sizes.
 - Partner control time rules live in pair_controls.settings `t_<key>` and are applied on read via `applyTiming` (src/lib/timing.ts); why: no background job is needed to switch controls off when time ends.
+- Family Corner items live in feed_items; only the server decency check (feed.functions.ts) may set status, and partners read only safe items unless pair_controls settings g_feed_relax is active (why: the filter must hold even if the partner's app is tampered with).

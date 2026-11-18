@@ -152,6 +152,56 @@ export type Database = {
           },
         ]
       }
+      feed_items: {
+        Row: {
+          added_by: string
+          category: string
+          created_at: string
+          file_path: string
+          file_type: string | null
+          id: string
+          kind: string
+          pair_id: string
+          poster_path: string | null
+          status: string
+          title: string | null
+        }
+        Insert: {
+          added_by: string
+          category: string
+          created_at?: string
+          file_path: string
+          file_type?: string | null
+          id?: string
+          kind: string
+          pair_id: string
+          poster_path?: string | null
+          status?: string
+          title?: string | null
+        }
+        Update: {
+          added_by?: string
+          category?: string
+          created_at?: string
+          file_path?: string
+          file_type?: string | null
+          id?: string
+          kind?: string
+          pair_id?: string
+          poster_path?: string | null
+          status?: string
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_items_pair_id_fkey"
+            columns: ["pair_id"]
+            isOneToOne: false
+            referencedRelation: "pairs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           body: string | null
@@ -448,6 +498,7 @@ export type Database = {
         }
       }
       delete_message: { Args: { _id: string }; Returns: undefined }
+      feed_relaxed: { Args: { _pair: string }; Returns: boolean }
       generate_pair_code: { Args: never; Returns: string }
       has_role: {
         Args: {
