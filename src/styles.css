@@ -1,0 +1,151 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
+  --font-brand: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --text-ui: 15px;
+  --text-ui--line-height: 1.5;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-online: var(--online);
+  --color-warning: var(--warning);
+  --color-bubble-me: var(--bubble-me);
+  --color-bubble-me-foreground: var(--bubble-me-foreground);
+  --color-bubble-them: var(--bubble-them);
+  --color-chat-bg: var(--chat-bg);
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.25 0.02 250);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.25 0.02 250);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.25 0.02 250);
+  --primary: oklch(0.6 0.17 250);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.96 0.015 250);
+  --secondary-foreground: oklch(0.35 0.08 250);
+  --muted: oklch(0.96 0.008 250);
+  --muted-foreground: oklch(0.55 0.02 250);
+  --accent: oklch(0.95 0.03 250);
+  --accent-foreground: oklch(0.4 0.12 250);
+  --destructive: oklch(0.6 0.22 25);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.92 0.01 250);
+  --input: oklch(0.92 0.01 250);
+  --ring: oklch(0.6 0.17 250);
+  --online: oklch(0.72 0.19 150);
+  --warning: oklch(0.8 0.16 85);
+  --bubble-me: oklch(0.6 0.17 250);
+  --bubble-me-foreground: oklch(1 0 0);
+  --bubble-them: oklch(1 0 0);
+  --chat-bg: oklch(0.94 0.02 245);
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    font-size: var(--text-ui);
+    background-color: var(--color-muted);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    overscroll-behavior-y: auto;
+    -webkit-overflow-scrolling: touch;
+    text-rendering: optimizeLegibility;
+  }
+  /* Every inner scroll area: momentum scrolling, no browser pull-to-refresh hijack */
+  .overflow-y-auto, .overflow-auto, .overflow-x-auto, .overflow-y-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  .no-scrollbar { scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  @media (prefers-reduced-motion: reduce) {
+    html, .overflow-y-auto, .overflow-auto { scroll-behavior: auto; }
+  }
+}
+
+@keyframes fp-step-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fp-step-in { animation: fp-step-in .25s ease-out; }
+@keyframes fp-story-bar { from { width: 0; } to { width: 100%; } }
+.fp-story-bar { animation: fp-story-bar 5s linear forwards; }
+@keyframes fp-ring { 0% { transform: scale(1); opacity: .6; } 100% { transform: scale(1.8); opacity: 0; } }
+.fp-ring { animation: fp-ring 1.6s ease-out infinite; }
+
+/* Chat wallpapers: masked so color follows theme tokens */
+.chat-doodle {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M20 22c4-6 12-6 16 0s-4 12-8 14c-4-2-12-8-8-14z'/%3E%3Ccircle cx='86' cy='24' r='9'/%3E%3Cpath d='M70 70l10 10m0-10L70 80'/%3E%3Cpath d='M18 86h22v14H18z'/%3E%3Cpath d='M94 92l6-12 6 12z'/%3E%3Cpath d='M52 50c4 0 4 6 8 6s4-6 8-6'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M20 22c4-6 12-6 16 0s-4 12-8 14c-4-2-12-8-8-14z'/%3E%3Ccircle cx='86' cy='24' r='9'/%3E%3Cpath d='M70 70l10 10m0-10L70 80'/%3E%3Cpath d='M18 86h22v14H18z'/%3E%3Cpath d='M94 92l6-12 6 12z'/%3E%3Cpath d='M52 50c4 0 4 6 8 6s4-6 8-6'/%3E%3C/svg%3E");
+  -webkit-mask-size: 120px; mask-size: 120px;
+}
+.chat-dots {
+  -webkit-mask-image: radial-gradient(circle, black 1.5px, transparent 2px);
+  mask-image: radial-gradient(circle, black 1.5px, transparent 2px);
+  -webkit-mask-size: 18px 18px; mask-size: 18px 18px;
+}
+
+@keyframes buzz-shake {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  10%, 50%, 90% { transform: translate3d(-6px, 0, 0) rotate(-0.6deg); }
+  30%, 70% { transform: translate3d(6px, 0, 0) rotate(0.6deg); }
+}
+.animate-buzz { animation: buzz-shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) 2; }
+@keyframes pop-in { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+.animate-pop-in { animation: pop-in 0.16s ease-out; }
+
+/* Smooth, jank-free scrolling everywhere */
+.smooth-scroll,
+.overflow-y-auto,
+.overflow-auto {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--muted-foreground) 35%, transparent) transparent;
+  scroll-padding-bottom: 1.5rem;
+}
+.overflow-y-auto::-webkit-scrollbar,
+.overflow-auto::-webkit-scrollbar { width: 3px; height: 3px; }
+.overflow-y-auto::-webkit-scrollbar-thumb,
+.overflow-auto::-webkit-scrollbar-thumb { background: color-mix(in oklab, var(--muted-foreground) 35%, transparent); border-radius: 9999px; }
+.smooth-scroll { overflow-anchor: auto; }
+.smooth-scroll > * { overflow-anchor: none; }
+.smooth-scroll > *:last-child { overflow-anchor: auto; }
+.scroll-fade {
+  mask-image: linear-gradient(to bottom, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+}
