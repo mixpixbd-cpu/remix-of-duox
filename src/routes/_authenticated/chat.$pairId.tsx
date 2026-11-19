@@ -27,6 +27,8 @@ import { setRootBack, useBackClose } from "@/components/fp/PrivacyShield";
 import { ChatLockGate, getChatPin, setChatPin } from "@/components/fp/ChatLock";
 import { ControlPills } from "@/components/fp/ControlPills";
 import { PinDialog } from "@/components/fp/PinDialog";
+import { FunBubble, FunMenu, LoveBurst, WatchBar } from "@/components/fp/ChatFun";
+import { isFunKind, parse, type FunKind, type Game } from "@/lib/chat-fun";
 import { canRunDeviceAction, deviceActionUnavailable } from "@/lib/device-actions";
 import { ContactInfo, EmojiPanel, WallpaperLayer, fmtSecs, useHiddenMessages, useHoldRecorder, useWallpaper } from "@/components/fp/ChatPro";
 
@@ -98,6 +100,10 @@ function ChatPage() {
   const [caption, setCaption] = useState<{ files: File[]; text: string; urls: string[] } | null>(null);
   const [clearSheet, setClearSheet] = useState(false);
   const [shake, setShake] = useState(false);
+  const [fun, setFun] = useState(false);
+  const [love, setLove] = useState(false);
+  const [watch, setWatch] = useState<{ url: string; at: number } | null>(null);
+  useBackClose(fun, () => setFun(false));
   async function remote(kind: string) {
     if (!me.data || !isOwner || pair?.owner_id !== me.data.id) return;
     if (!canRunDeviceAction(kind)) { toast.error(deviceActionUnavailable(bn)); return; }
@@ -264,6 +270,7 @@ function ChatPage() {
     if (q !== null || !added.length) return;
     const mineAdded = added.some((m) => m.sender_id === me.data?.id);
     if (!first && added.some((m) => m.kind === "buzz" && m.sender_id !== me.data?.id)) buzzFx();
+    if (!first && added.some((m) => m.kind === "love" && m.sender_id !== me.data?.id)) loveFx();
     if (first || atBottom || mineAdded) bottom.current?.scrollIntoView({ behavior: first ? "auto" : "smooth" });
     else setUnseen((n) => n + added.length);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -277,6 +284,16 @@ function ChatPage() {
     } catch { /* no audio */ }
     setShake(true); setTimeout(() => setShake(false), 900);
     toast(bn ? `⚡ ${pair?.other.display_name ?? ""} আপনাকে বাজ দিয়েছে!` : `⚡ ${pair?.other.display_name ?? ""} buzzed you!`);
+  }
+  function loveFx() {
+    navigator.vibrate?.([120, 80, 120, 400, 120, 80, 120]);
+    setLove(true); setTimeout(() => setLove(false), 2800);
+  }
+  async function sendFun(kind: FunKind, body: string) {
+    if (!me.data || paused) return;
+    const { error } = await supabase.from("messages").insert({ pair_id: pairId, sender_id: me.data.id, kind, body, expires_at: expiry() });
+    if (error) toast.error(error.message);
+    else { if (kind === "love") loveFx(); qc.invalidateQueries({ queryKey: ["messages", pairId] }); }
   }
   async function sendBuzz() {
     setMore(false);
@@ -536,6 +553,8 @@ function ChatPage() {
 
   const needle = q?.trim().toLowerCase() ?? "";
   const shown = (messages.data ?? []).filter((m) => !hidden.has(m.id) && !isExpired(m));
+  const latestGame = new Map<string, string>();
+  for (const m of messages.data ?? []) if (m.kind === "game") { const g = parse<Game>(m.body); if (g) latestGame.set(g.id, m.id); }
   const hits = needle ? shown.filter((m) => !m.deleted_at && ((m.body ?? "").toLowerCase().includes(needle) || (m.file_name ?? "").toLowerCase().includes(needle))).map((m) => m.id) : [];
   const hitPos = hits.length ? Math.min(hitIdx, hits.length - 1) : -1;
   const curHit = hitPos >= 0 ? hits[hitPos] : null;
@@ -625,6 +644,8 @@ function ChatPage() {
 
       <div className="relative min-h-0 flex-1">
       <WallpaperLayer kind={wall} />
+      <LoveBurst show={love} />
+      {watch && <WatchBar url={watch.url} at={watch.at} onClose={() => setWatch(null)} />}
       {isOwner && q === null && !sel && <ControlPills pairId={pairId} ctl={controls.data} muted={muted} onMute={(ms) => setMute(ms)} bn={bn} />}
       <div ref={scroll} onScroll={onScroll} onPointerDown={() => emo && setEmo(false)} className="scroll-fade relative h-full overflow-y-auto">
         <div className="min-h-full space-y-2 p-3">
@@ -646,7 +667,12 @@ function ChatPage() {
                 <span className="h-px flex-1 bg-primary/40" />
               </div>
             )}
-            <Bubble
+            {isFunKind(m.kind) && me.data ? (
+              <FunBubble m={m} mine={m.sender_id === me.data.id} bn={bn} me={me.data.id}
+                time={new Date(m.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                isLatestGame={m.kind !== "game" || latestGame.get(parse<Game>(m.body)?.id ?? "") === m.id}
+                onSend={sendFun} onWatch={(url, at) => setWatch({ url, at })} />
+            ) : <Bubble
               message={m}
               mine={m.sender_id === me.data?.id}
               lang={lang}
@@ -661,7 +687,7 @@ function ChatPage() {
               starred={starred.has(m.id)}
               onReact={(em) => react(m, em)}
               onReply={!m.deleted_at && m.kind !== "call" && !paused ? () => { setEditing(null); setReplyTo(m); } : undefined}
-            />
+            />}
             </div>
           ))}
           {isTyping(pairId) && (
@@ -908,11 +934,21 @@ function ChatPage() {
                 {bn ? o.bn : o.en}
               </button>
             ))}
+            <button onClick={() => { setAttach(false); setFun(true); }} className="flex flex-col items-center gap-1.5 rounded-xl p-2 text-xs font-semibold active:bg-muted">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary"><Heart className="h-6 w-6" /></span>
+              {bn ? "মজা ❤️" : "Fun ❤️"}
+            </button>
             <button onClick={shareLocation} className="flex flex-col items-center gap-1.5 rounded-xl p-2 text-xs font-semibold active:bg-muted">
               <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-primary"><MapPin className="h-6 w-6" /></span>
               {bn ? "লোকেশন" : "Location"}
             </button>
           </div>
+        </Sheet>
+      )}
+
+      {fun && me.data && pair && (
+        <Sheet onClose={() => setFun(false)}>
+          <FunMenu bn={bn} me={me.data.id} other={pair.other.id} onSend={sendFun} onClose={() => setFun(false)} />
         </Sheet>
       )}
 
