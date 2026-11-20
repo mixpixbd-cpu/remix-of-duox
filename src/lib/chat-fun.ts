@@ -48,7 +48,7 @@ export function watchOffset(startedAt: number, now = Date.now()) {
 }
 
 /* ---------- Gift with a secret love note ---------- */
-export type GiftBody = { e: string; note?: string };
+export type GiftBody = { e: string; note?: string | undefined };
 export function parseGift(s: string | null): GiftBody | null {
   if (!s) return null;
   const j = parse<GiftBody>(s.startsWith("{") ? s : null);

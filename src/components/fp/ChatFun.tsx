@@ -252,6 +252,7 @@ export function TapGame({ bn, onDone, onClose }: { bn: boolean; onDone: (n: numb
       }, 100);
       return () => clearInterval(t);
     }
+    return undefined;
   }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center bg-background/95 backdrop-blur">
