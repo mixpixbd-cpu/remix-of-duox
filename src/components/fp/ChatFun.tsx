@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import {
   GIFTS, WHEEL, QUIZ, LUDO_END, TAP_SECONDS, parse, parseGift, play, turnOf, winner, quizCorrect, newLudo, ludoMove, ludoWinner, canMove,
-  tapResult, youtubeId, watchPos, type FunKind, type Game, type Quiz, type Ludo, type Tap, type Watch,
+  tapResult, youtubeId, socialEmbed, watchPos, type FunKind, type Game, type Quiz, type Ludo, type Tap, type Watch,
 } from "@/lib/chat-fun";
 
 type Msg = { id: string; kind: string; body: string | null; sender_id: string; created_at: string };
@@ -306,6 +306,7 @@ export function WatchBar({ w, bn, onSync, onClose }: { w: Watch; bn: boolean; on
   const ref = useRef<HTMLVideoElement>(null);
   const quiet = useRef(false);
   const yt = youtubeId(w.url);
+  const social = yt ? null : socialEmbed(w.url);
   useEffect(() => {
     const v = ref.current;
     if (!v) return;
@@ -337,6 +338,8 @@ export function WatchBar({ w, bn, onSync, onClose }: { w: Watch; bn: boolean; on
             </button>
           </div>
         </>
+      ) : social ? (
+        <iframe title="player" allow="autoplay; encrypted-media; clipboard-write" allowFullScreen className="h-72 w-full bg-background" src={social} />
       ) : (
         <video ref={ref} src={w.url} controls playsInline className="max-h-48 w-full" onPlay={ev(false)} onPause={ev(true)} onSeeked={() => { const v = ref.current; if (v && !quiet.current) share(v.paused, v.currentTime); }} />
       )}

@@ -16,6 +16,7 @@ import { Route as UiCheckRouteImport } from './routes/ui-check'
 import { Route as AuthenticatedFeedRouteImport } from './routes/_authenticated/feed'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
+import { Route as AuthenticatedTogetherRouteImport } from './routes/_authenticated/together'
 import { Route as AuthenticatedCallPairIdRouteImport } from './routes/_authenticated/call.$pairId'
 import { Route as AuthenticatedChatPairIdRouteImport } from './routes/_authenticated/chat.$pairId'
 import { Route as AuthenticatedControlPairIdRouteImport } from './routes/_authenticated/control.$pairId'
@@ -54,6 +55,11 @@ const AuthenticatedSearchRoute = AuthenticatedSearchRouteImport.update({
   path: '/search',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedTogetherRoute = AuthenticatedTogetherRouteImport.update({
+  id: '/together',
+  path: '/together',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCallPairIdRoute = AuthenticatedCallPairIdRouteImport.update({
   id: '/call/$pairId',
   path: '/call/$pairId',
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/feed': typeof AuthenticatedFeedRoute
   '/home': typeof AuthenticatedHomeRoute
   '/search': typeof AuthenticatedSearchRoute
+  '/together': typeof AuthenticatedTogetherRoute
   '/call/$pairId': typeof AuthenticatedCallPairIdRoute
   '/chat/$pairId': typeof AuthenticatedChatPairIdRoute
   '/control/$pairId': typeof AuthenticatedControlPairIdRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/feed': typeof AuthenticatedFeedRoute
   '/home': typeof AuthenticatedHomeRoute
   '/search': typeof AuthenticatedSearchRoute
+  '/together': typeof AuthenticatedTogetherRoute
   '/call/$pairId': typeof AuthenticatedCallPairIdRoute
   '/chat/$pairId': typeof AuthenticatedChatPairIdRoute
   '/control/$pairId': typeof AuthenticatedControlPairIdRoute
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/_authenticated/feed': typeof AuthenticatedFeedRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
+  '/_authenticated/together': typeof AuthenticatedTogetherRoute
   '/_authenticated/call/$pairId': typeof AuthenticatedCallPairIdRoute
   '/_authenticated/chat/$pairId': typeof AuthenticatedChatPairIdRoute
   '/_authenticated/control/$pairId': typeof AuthenticatedControlPairIdRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/home'
     | '/search'
+    | '/together'
     | '/call/$pairId'
     | '/chat/$pairId'
     | '/control/$pairId'
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/home'
     | '/search'
+    | '/together'
     | '/call/$pairId'
     | '/chat/$pairId'
     | '/control/$pairId'
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/_authenticated/feed'
     | '/_authenticated/home'
     | '/_authenticated/search'
+    | '/_authenticated/together'
     | '/_authenticated/call/$pairId'
     | '/_authenticated/chat/$pairId'
     | '/_authenticated/control/$pairId'
@@ -201,6 +213,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSearchRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/together': {
+      id: '/_authenticated/together'
+      path: '/together'
+      fullPath: '/together'
+      preLoaderRoute: typeof AuthenticatedTogetherRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/call/$pairId': {
       id: '/_authenticated/call/$pairId'
       path: '/call/$pairId'
@@ -229,6 +248,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFeedRoute: typeof AuthenticatedFeedRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
+  AuthenticatedTogetherRoute: typeof AuthenticatedTogetherRoute
   AuthenticatedCallPairIdRoute: typeof AuthenticatedCallPairIdRoute
   AuthenticatedChatPairIdRoute: typeof AuthenticatedChatPairIdRoute
   AuthenticatedControlPairIdRoute: typeof AuthenticatedControlPairIdRoute
@@ -238,6 +258,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFeedRoute: AuthenticatedFeedRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
+  AuthenticatedTogetherRoute: AuthenticatedTogetherRoute,
   AuthenticatedCallPairIdRoute: AuthenticatedCallPairIdRoute,
   AuthenticatedChatPairIdRoute: AuthenticatedChatPairIdRoute,
   AuthenticatedControlPairIdRoute: AuthenticatedControlPairIdRoute,

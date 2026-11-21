@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Heart, Send, ShieldCheck, ShieldOff, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Heart, Send, ShieldCheck, ShieldOff, Trash2, Upload, Volume2, VolumeX, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMe, fetchPairs } from "@/lib/fp";
 import { FEED_CATS, kindOf, wishText, type FeedCat, type FeedItem } from "@/lib/feed";
@@ -125,6 +125,8 @@ function Feed() {
   }
 
   const reels = cat === "recipe" || cat === "fun";
+  const [muted, setMuted] = useState(true);
+  const [book, setBook] = useState<number | null>(null);
   return (
     <div className="flex h-[100dvh] flex-col bg-background">
       <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-2">
@@ -150,14 +152,52 @@ function Feed() {
       {pair && items.data?.length === 0 && <p className="p-6 text-center text-ui text-muted-foreground">এখনো কিছু নেই — উপরের ⬆ বাটনে যোগ করুন</p>}
       <div className={reels ? "min-h-0 flex-1 snap-y snap-mandatory overflow-y-auto" : "grid min-h-0 flex-1 auto-rows-max grid-cols-2 gap-2 overflow-y-auto p-3"}>
         {items.data?.map((it) => (
-          <Card key={it.id} it={it} reel={reels} owner={!!isOwner} onWish={() => sendToChat(it, true)} onShare={() => sendToChat(it, false)} onDelete={() => remove(it)} />
+          <Card key={it.id} it={it} reel={reels} muted={muted} onMute={() => setMuted((m) => !m)} onOpen={() => setBook(items.data!.indexOf(it))} owner={!!isOwner} onWish={() => sendToChat(it, true)} onShare={() => sendToChat(it, false)} onDelete={() => remove(it)} />
         ))}
       </div>
+      {book !== null && items.data?.[book] && <Book items={items.data} start={book} onClose={() => setBook(null)} onWish={(it) => sendToChat(it, true)} onShare={(it) => sendToChat(it, false)} />}
     </div>
   );
 }
 
-function Card({ it, reel, owner, onWish, onShare, onDelete }: { it: FeedItem; reel: boolean; owner: boolean; onWish: () => void; onShare: () => void; onDelete: () => void }) {
+/** Magazine-style full-screen catalog: swipe left/right page by page, pinch to zoom. */
+function Book({ items, start, onClose, onWish, onShare }: { items: FeedItem[]; start: number; onClose: () => void; onWish: (it: FeedItem) => void; onShare: (it: FeedItem) => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [i, setI] = useState(start);
+  useEffect(() => { ref.current?.scrollTo({ left: start * (ref.current?.clientWidth ?? 0) }); }, [start]);
+  const go = (d: number) => ref.current?.scrollBy({ left: d * ref.current.clientWidth, behavior: "smooth" });
+  const cur = items[i];
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-foreground">
+      <div className="flex items-center justify-between p-3 text-background">
+        <span className="text-ui">{i + 1} / {items.length}</span>
+        <button aria-label="বন্ধ" onClick={onClose} className="rounded-full bg-background/20 p-2"><X className="h-5 w-5" /></button>
+      </div>
+      <div ref={ref} onScroll={(e) => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))} className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto">
+        {items.map((it) => <Page key={it.id} it={it} />)}
+      </div>
+      <div className="flex items-center gap-2 bg-background px-3 py-3">
+        <button aria-label="আগের" onClick={() => go(-1)} className="rounded-full bg-muted p-2"><ChevronLeft className="h-5 w-5" /></button>
+        <p className="min-w-0 flex-1 truncate text-center text-ui">{cur?.title}</p>
+        {cur && <button onClick={() => onWish(cur)} className="flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-ui text-primary-foreground"><Heart className="h-4 w-4 fill-current" />আমার পছন্দ</button>}
+        {cur && <button aria-label="চ্যাটে পাঠান" onClick={() => onShare(cur)} className="rounded-full bg-muted p-2 text-primary"><Send className="h-4 w-4" /></button>}
+        <button aria-label="পরের" onClick={() => go(1)} className="rounded-full bg-muted p-2"><ChevronRight className="h-5 w-5" /></button>
+      </div>
+    </div>
+  );
+}
+function Page({ it }: { it: FeedItem }) {
+  const url = useSigned(it.file_path).data;
+  return (
+    <div className="flex h-full w-full shrink-0 snap-center items-center justify-center overflow-auto" style={{ touchAction: "pan-x pinch-zoom" }}>
+      {url && (it.kind === "image" ? <img src={url} alt={it.title ?? ""} className="max-h-full max-w-full object-contain" />
+        : it.kind === "video" ? <video src={url} controls playsInline className="max-h-full max-w-full" />
+        : <audio src={url} controls className="w-4/5" />)}
+    </div>
+  );
+}
+
+function Card({ it, reel, muted, onMute, onOpen, owner, onWish, onShare, onDelete }: { it: FeedItem; reel: boolean; muted: boolean; onMute: () => void; onOpen: () => void; owner: boolean; onWish: () => void; onShare: () => void; onDelete: () => void }) {
   const url = useSigned(it.file_path).data;
   const vref = useRef<HTMLVideoElement>(null);
   useEffect(() => {
@@ -166,8 +206,8 @@ function Card({ it, reel, owner, onWish, onShare, onDelete }: { it: FeedItem; re
     io.observe(v); return () => io.disconnect();
   }, [reel, url]);
   const media = !url ? <div className="aspect-square w-full animate-pulse bg-muted" />
-    : it.kind === "image" ? <img src={url} alt={it.title ?? ""} className={reel ? "h-full w-full object-contain" : "aspect-[3/4] w-full rounded-xl object-cover"} />
-    : it.kind === "video" ? <video ref={vref} src={url} playsInline loop controls={!reel} onClick={(e) => { const v = e.currentTarget; v.paused ? v.play() : v.pause(); }} className={reel ? "h-full w-full object-contain" : "aspect-[3/4] w-full rounded-xl object-cover"} />
+    : it.kind === "image" ? <img src={url} alt={it.title ?? ""} onClick={reel ? undefined : onOpen} className={reel ? "h-full w-full object-contain" : "aspect-[3/4] w-full cursor-zoom-in rounded-xl object-cover"} />
+    : it.kind === "video" ? <video ref={vref} src={url} playsInline loop muted={reel && muted} controls={!reel} onClick={(e) => { const v = e.currentTarget; v.paused ? v.play() : v.pause(); }} className={reel ? "h-full w-full object-contain" : "aspect-[3/4] w-full rounded-xl object-cover"} />
     : <div className="flex aspect-[3/4] w-full flex-col items-center justify-center gap-3 rounded-xl bg-muted p-3"><span className="text-4xl">🎧</span><audio src={url} controls className="w-full" /></div>;
   const badge = it.status !== "safe" && owner ? <span className="absolute left-2 top-2 rounded-full bg-background/90 px-2 py-0.5 text-ui">{it.status === "blocked" ? "🚫 আটকানো" : "⏳ যাচাই"}</span> : null;
   const actions = (
@@ -178,9 +218,10 @@ function Card({ it, reel, owner, onWish, onShare, onDelete }: { it: FeedItem; re
     </div>
   );
   if (reel) return (
-    <section className="relative flex h-full snap-start flex-col bg-foreground/95">
-      <div className="relative min-h-0 flex-1">{media}{badge}</div>
-      <div className="flex items-center gap-2 bg-background px-3 py-2"><p className="min-w-0 flex-1 truncate text-ui">{it.title}</p>{actions}</div>
+    <section className="relative h-full snap-start snap-always bg-foreground">
+      {media}{badge}
+      {it.kind === "video" && <button aria-label={muted ? "সাউন্ড চালু" : "সাউন্ড বন্ধ"} onClick={onMute} className="absolute right-3 top-3 rounded-full bg-background/80 p-2">{muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}</button>}
+      <div className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-foreground/80 to-transparent px-3 pb-4 pt-10"><p className="min-w-0 flex-1 truncate text-ui text-background">{it.title}</p>{actions}</div>
     </section>
   );
   return (

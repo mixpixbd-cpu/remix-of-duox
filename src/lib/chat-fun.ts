@@ -119,3 +119,11 @@ export function youtubeId(url: string): string | null {
 }
 /** Position (seconds) both players should be at now. */
 export const watchPos = (w: Watch, now = Date.now()) => (w.p !== undefined ? w.p : watchOffset(w.at, now));
+
+/** Facebook / Instagram videos that can be shown through their official embed player. */
+export function socialEmbed(url: string): string | null {
+  if (/^https:\/\/(www\.|m\.|web\.)?(facebook\.com|fb\.watch)\//.test(url))
+    return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&autoplay=true`;
+  const ig = url.match(/^https:\/\/(www\.)?instagram\.com\/(reel|reels|p|tv)\/([\w-]+)/);
+  return ig ? `https://www.instagram.com/${ig[2] === "reels" ? "reel" : ig[2]}/${ig[3]}/embed` : null;
+}

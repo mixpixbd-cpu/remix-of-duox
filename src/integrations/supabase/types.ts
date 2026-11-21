@@ -73,6 +73,38 @@ export type Database = {
           },
         ]
       }
+      couple_corner: {
+        Row: {
+          dates: Json
+          garden: Json
+          pair_id: string
+          pet: Json
+          updated_at: string
+        }
+        Insert: {
+          dates?: Json
+          garden?: Json
+          pair_id: string
+          pet?: Json
+          updated_at?: string
+        }
+        Update: {
+          dates?: Json
+          garden?: Json
+          pair_id?: string
+          pet?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "couple_corner_pair_id_fkey"
+            columns: ["pair_id"]
+            isOneToOne: true
+            referencedRelation: "pairs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       device_reports: {
         Row: {
           created_at: string

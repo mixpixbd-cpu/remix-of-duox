@@ -198,6 +198,9 @@ function Home() {
         <button aria-label="পারিবারিক কর্নার" onClick={() => navigate({ to: "/feed" })} className="rounded-full p-2 text-primary">
           <Clapperboard className="h-[22px] w-[22px]" />
         </button>
+        <button aria-label="আমাদের দুজন" onClick={() => navigate({ to: "/together" })} className="rounded-full p-2 text-primary">
+          <Heart className="h-[22px] w-[22px]" />
+        </button>
         <button aria-label="Search" onClick={() => navigate({ to: "/search" })} className="rounded-full p-2 text-primary">
           <Search className="h-[22px] w-[22px]" />
         </button>
