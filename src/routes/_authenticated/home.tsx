@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Bell, BellOff, Camera, Clapperboard, Copy, Eraser, Heart, ImagePlus, Info, MessageCircle, Phone, PhoneMissed, PhoneOutgoing, Pin, PinOff, Plus, Search, Smartphone, Trash2, UserPlus, Users, X } from "lucide-react";
+import { ArrowLeft, Bell, BellOff, Camera, Copy, Eraser, Heart, ImagePlus, Info, MessageCircle, Phone, PhoneMissed, PhoneOutgoing, Pin, PinOff, Plus, Search, Smartphone, Trash2, UserPlus, Users, X } from "lucide-react";
 import { useTypingWatch } from "@/lib/typing";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchLastMessages, fetchMe, fetchPairs, fetchStories, isOnline, presenceOf, shortTime, type Story } from "@/lib/fp";
@@ -194,12 +194,6 @@ function Home() {
       <nav className={`z-10 h-14 shrink-0 items-center justify-between border-t border-border bg-background px-4 ${idx === 0 ? "hidden" : "flex"}`}>
         <button aria-label={isOwner ? "Add partner" : "Contacts"} onClick={() => setSheet(true)} className="rounded-full p-2 text-primary">
           <Plus className="h-[22px] w-[22px]" />
-        </button>
-        <button aria-label="পারিবারিক কর্নার" onClick={() => navigate({ to: "/feed" })} className="rounded-full p-2 text-primary">
-          <Clapperboard className="h-[22px] w-[22px]" />
-        </button>
-        <button aria-label="আমাদের দুজন" onClick={() => navigate({ to: "/together" })} className="rounded-full p-2 text-primary">
-          <Heart className="h-[22px] w-[22px]" />
         </button>
         <button aria-label="Search" onClick={() => navigate({ to: "/search" })} className="rounded-full p-2 text-primary">
           <Search className="h-[22px] w-[22px]" />
@@ -504,34 +498,62 @@ function StoryReel({ me, pairs }: { me: Me; pairs: Pairs }) {
   for (const s of stories.data ?? []) if (names[s.author_id]) byAuthor.set(s.author_id, [...(byAuthor.get(s.author_id) ?? []), s]);
   const authors = [...byAuthor.keys()].sort((a) => (a === me.id ? -1 : 1));
 
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const others = authors.filter((a) => a !== me.id);
+  const ring = "flex w-16 shrink-0 flex-col items-center gap-1";
+  const circle = "flex h-14 w-14 items-center justify-center rounded-full bg-muted text-2xl";
+  const SHORTCUTS = [
+    { k: "explore", en: "Explore", bn: "এক্সপ্লোর", e: "🧭", go: () => navigate({ to: "/feed" }) },
+    { k: "memories", en: "Memories", bn: "স্মৃতি", e: "📸", go: () => navigate({ to: "/together", search: { tab: "memories" } }) },
+    { k: "pet", en: "Pet", bn: "পোষা", e: "🐱", go: () => navigate({ to: "/together", search: { tab: "pet" } }) },
+    { k: "garden", en: "Garden", bn: "বাগান", e: "🌸", go: () => navigate({ to: "/together", search: { tab: "garden" } }) },
+    { k: "camera", en: "Camera", bn: "ক্যামেরা", e: "👑", go: () => navigate({ to: "/together", search: { tab: "camera" } }) },
+  ];
+  const authorRing = (a: string) => (
+    <button key={a} onClick={() => setViewing(a)} className={`${ring} animate-in fade-in zoom-in-75`}>
+      <span className="rounded-full bg-primary p-[2.5px]"><span className="block rounded-full bg-background p-[2px]"><FpAvatar name={names[a] ?? "?"} size={48} /></span></span>
+      <span className="w-full truncate text-center text-ui font-semibold">{names[a] ?? "—"}</span>
+    </button>
+  );
+  const next = (a: string) => { const i = authors.indexOf(a); setViewing(authors[i + 1] ?? null); };
+
   return (
     <>
-      <div className="no-scrollbar flex gap-4 overflow-x-auto border-b border-border px-4 py-4">
-        <button onClick={() => setCompose(true)} className="flex w-16 shrink-0 flex-col items-center gap-1">
+      <div className="flex gap-3 overflow-x-auto px-3 py-3">
+        <button onClick={() => setCompose(true)} className={ring}>
           <span className="relative flex h-14 w-14 items-center justify-center rounded-full bg-muted text-foreground">
             <Camera className="h-6 w-6" />
             <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground"><Plus className="h-3 w-3" /></span>
           </span>
           <span className="w-full truncate text-center text-ui">{bn ? "স্টোরি" : "Story"}</span>
         </button>
-        {authors.map((a) => (
-          <button key={a} onClick={() => setViewing(a)} className="flex w-16 shrink-0 flex-col items-center gap-1">
-            <span className="rounded-full bg-primary p-[2.5px]">
-              <span className="block rounded-full bg-background p-[2px]">
-                <FpAvatar name={names[a] ?? "?"} size={48} />
-              </span>
+        {byAuthor.has(me.id) && authorRing(me.id)}
+        {others.length > 0 && (open ? others.map(authorRing) : (
+          <button onClick={() => (others.length === 1 ? setViewing(others[0]!) : setOpen(true))} className={ring}>
+            <span className="relative rounded-full bg-primary p-[2.5px]">
+              <span className="block rounded-full bg-background p-[2px]"><FpAvatar name={names[others[0]!] ?? "?"} size={48} /></span>
+              {others.length > 1 && <span className="absolute -bottom-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-background bg-primary px-1 text-ui font-bold text-primary-foreground">{others.length}</span>}
             </span>
-            <span className="w-full truncate text-center text-ui font-semibold">{names[a] ?? "—"}</span>
+            <span className="w-full truncate text-center text-ui font-semibold">{bn ? "স্টোরিজ" : "Stories"}</span>
+          </button>
+        ))}
+        {SHORTCUTS.map((c) => (
+          <button key={c.k} onClick={c.go} className={ring}>
+            <span className={circle}>{c.e}</span>
+            <span className="w-full truncate text-center text-ui">{bn ? c.bn : c.en}</span>
           </button>
         ))}
       </div>
       {compose && <StoryComposer me={me} onClose={() => setCompose(false)} />}
       {viewing && (
         <StoryViewer
+          key={viewing}
           me={me}
           name={names[viewing] ?? ""}
           stories={byAuthor.get(viewing) ?? []}
-          onClose={() => setViewing(null)}
+          onClose={() => { setViewing(null); setOpen(false); }}
+          onDone={() => next(viewing)}
         />
       )}
     </>
@@ -598,7 +620,7 @@ function StoryComposer({ me, onClose }: { me: Me; onClose: () => void }) {
   );
 }
 
-function StoryViewer({ me, name, stories, onClose }: { me: Me; name: string; stories: Story[]; onClose: () => void }) {
+function StoryViewer({ me, name, stories, onClose, onDone }: { me: Me; name: string; stories: Story[]; onClose: () => void; onDone: () => void }) {
   useBackClose(true, onClose);
   const qc = useQueryClient();
   const { lang } = useT();
@@ -607,12 +629,12 @@ function StoryViewer({ me, name, stories, onClose }: { me: Me; name: string; sto
   const s = stories[i];
 
   useEffect(() => {
-    if (!s) { onClose(); return; }
+    if (!s) { onDone(); return; }
     setUrl(null);
     if (s.media_path)
       supabase.storage.from("fixedpair-stories").createSignedUrl(s.media_path, 600).then(({ data }) => setUrl(data?.signedUrl ?? null));
     if (s.author_id !== me.id) supabase.from("story_views").insert({ story_id: s.id, viewer_id: me.id }).then(() => {});
-    const tm = setTimeout(() => (i < stories.length - 1 ? setI(i + 1) : onClose()), 5000);
+    const tm = setTimeout(() => (i < stories.length - 1 ? setI(i + 1) : onDone()), 5000);
     return () => clearTimeout(tm);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [i, s?.id]);

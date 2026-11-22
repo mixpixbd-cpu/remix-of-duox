@@ -18,6 +18,7 @@ export const Route = createFileRoute("/_authenticated/together")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>): { tab?: Tab } => (["memories", "pet", "garden", "camera"].includes(s["tab"] as string) ? { tab: s["tab"] as Tab } : {}),
   component: Together,
 });
 
@@ -29,7 +30,7 @@ const DATE_LABEL: Record<keyof Dates, string> = { anniversary: "বিবাহ�
 
 function Together() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<Tab>("memories");
+  const [tab, setTab] = useState<Tab>(Route.useSearch().tab ?? "memories");
   const me = useQuery({ queryKey: ["me"], queryFn: fetchMe });
   const pairs = useQuery({ queryKey: ["pairs", me.data?.id], queryFn: () => fetchPairs(me.data!.id), enabled: !!me.data });
   const pair = pairs.data?.[0];

@@ -2,10 +2,10 @@
 export type FeedCat = "recipe" | "mehendi" | "fashion" | "islamic" | "fun";
 export const FEED_CATS: { key: FeedCat; bn: string; en: string; emoji: string }[] = [
   { key: "recipe", bn: "রান্না", en: "Recipes", emoji: "🍳" },
-  { key: "mehendi", bn: "মেহেদি ও রূপচর্চা", en: "Mehendi & beauty", emoji: "🌿" },
-  { key: "fashion", bn: "জামা, শাড়ি ও গয়না", en: "Clothes & jewellery", emoji: "👗" },
+  { key: "mehendi", bn: "মেহেদি ও রূপচর্চা", en: "Mehendi", emoji: "🌿" },
+  { key: "fashion", bn: "জামা, শাড়ি ও গয়না", en: "Outfits", emoji: "👗" },
   { key: "islamic", bn: "বয়ান ও তিলাওয়াত", en: "Islamic", emoji: "🕌" },
-  { key: "fun", bn: "হাসির ভিডিও", en: "Family fun", emoji: "😄" },
+  { key: "fun", bn: "হাসির ভিডিও", en: "Funny", emoji: "😄" },
 ];
 export type FeedItem = { id: string; pair_id: string; added_by: string; category: string; kind: string; title: string | null; file_path: string; file_type: string | null; poster_path: string | null; status: string; created_at: string };
 

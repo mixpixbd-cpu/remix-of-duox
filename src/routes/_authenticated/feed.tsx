@@ -12,10 +12,10 @@ import { moderateFeedItem } from "@/lib/feed.functions";
 export const Route = createFileRoute("/_authenticated/feed")({
   head: () => ({
     meta: [
-      { title: "পারিবারিক কর্নার — DuoX" },
-      { name: "description", content: "রান্না, মেহেদি, পোশাক, তিলাওয়াত ও হাসির ভিডিও — শালীন ও নিরাপদ।" },
-      { property: "og:title", content: "পারিবারিক কর্নার — DuoX" },
-      { property: "og:description", content: "রান্না, মেহেদি, পোশাক, তিলাওয়াত ও হাসির ভিডিও — শালীন ও নিরাপদ।" },
+      { title: "Explore — DuoX" },
+      { name: "description", content: "Recipes, mehendi, outfits, Islamic and family-fun videos and photos in one safe feed." },
+      { property: "og:title", content: "Explore — DuoX" },
+      { property: "og:description", content: "Recipes, mehendi, outfits, Islamic and family-fun videos and photos in one safe feed." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -52,7 +52,7 @@ function Feed() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const moderate = useServerFn(moderateFeedItem);
-  const [cat, setCat] = useState<FeedCat>("recipe");
+  const [cat, setCat] = useState<FeedCat | "all">("all");
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const me = useQuery({ queryKey: ["me"], queryFn: fetchMe });
@@ -62,7 +62,7 @@ function Feed() {
   const items = useQuery({
     queryKey: ["feed", pair?.id, cat], enabled: !!pair,
     queryFn: async () => {
-      const { data, error } = await supabase.from("feed_items").select("*").eq("pair_id", pair!.id).eq("category", cat).order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("feed_items").select("*").eq("pair_id", pair!.id).in("category", cat === "all" ? FEED_CATS.map((c) => c.key) : [cat]).order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as FeedItem[];
     },
@@ -96,7 +96,7 @@ function Feed() {
         if (b) { poster = `${base}-poster.jpg`; await supabase.storage.from("fixedpair-files").upload(poster, b, { contentType: "image/jpeg" }); }
       }
       const title = window.prompt("শিরোনাম (ঐচ্ছিক)") ?? "";
-      const { data, error } = await supabase.from("feed_items").insert({ pair_id: pair.id, added_by: me.data.id, category: cat, kind, title: title || null, file_path: path, file_type: file.type, poster_path: poster }).select("id").single();
+      const { data, error } = await supabase.from("feed_items").insert({ pair_id: pair.id, added_by: me.data.id, category: cat === "all" ? "fun" : cat, kind, title: title || null, file_path: path, file_type: file.type, poster_path: poster }).select("id").single();
       if (error) throw error;
       toast("এআই শালীনতা যাচাই চলছে…");
       const verdict = await moderate({ data: { id: data.id } });
@@ -124,20 +124,21 @@ function Feed() {
     qc.invalidateQueries({ queryKey: ["feed"] });
   }
 
-  const reels = cat === "recipe" || cat === "fun";
+  const reels = true;
   const [muted, setMuted] = useState(true);
   const [book, setBook] = useState<number | null>(null);
   return (
     <div className="flex h-[100dvh] flex-col bg-background">
       <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-2">
         <button aria-label="Back" onClick={() => navigate({ to: "/home" })} className="rounded-full p-2 text-primary"><ArrowLeft className="h-5 w-5" /></button>
-        <h1 className="flex-1 text-ui font-semibold">পারিবারিক কর্নার</h1>
+        <h1 className="flex-1 text-ui font-semibold">Explore</h1>
         {pair && <button aria-label="যোগ করুন" disabled={busy} onClick={() => fileRef.current?.click()} className="rounded-full p-2 text-primary disabled:opacity-40"><Upload className="h-5 w-5" /></button>}
         <input ref={fileRef} type="file" accept="image/*,video/*,audio/*" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) upload(f); }} />
       </header>
       <nav className="flex shrink-0 gap-2 overflow-x-auto px-3 py-2">
+        <button onClick={() => setCat("all")} className={`shrink-0 rounded-full px-3 py-1.5 text-ui ${cat === "all" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}>All</button>
         {FEED_CATS.map((c) => (
-          <button key={c.key} onClick={() => setCat(c.key)} className={`shrink-0 rounded-full px-3 py-1.5 text-ui ${cat === c.key ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}>{c.emoji} {c.bn}</button>
+          <button key={c.key} onClick={() => setCat(c.key)} className={`shrink-0 rounded-full px-3 py-1.5 text-ui ${cat === c.key ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}>{c.emoji} {c.en}</button>
         ))}
       </nav>
       {isOwner && pair && (
