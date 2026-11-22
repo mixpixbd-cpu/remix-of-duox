@@ -13,6 +13,6 @@ describe("family library", () => {
     expect(kindOf("application/pdf")).toBeNull();
   });
   it("wish message names the item", () => {
-    expect(wishText("লাল শাড়ি", "fashion")).toBe("❤️ আমার পছন্দ / আবদার: লাল শাড়ি");
+    expect(wishText("লাল শাড়ি", "fashion", "bn")).toBe("❤️ আমার পছন্দ / আবদার: লাল শাড়ি");
   });
 });

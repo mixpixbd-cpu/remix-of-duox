@@ -634,11 +634,10 @@ function StoryViewer({ me, name, stories, onClose, onDone }: { me: Me; name: str
     if (s.media_path)
       supabase.storage.from("fixedpair-stories").createSignedUrl(s.media_path, 600).then(({ data }) => setUrl(data?.signedUrl ?? null));
     if (s.author_id !== me.id) supabase.from("story_views").insert({ story_id: s.id, viewer_id: me.id }).then(() => {});
-    const tm = setTimeout(() => (i < stories.length - 1 ? setI(i + 1) : onDone()), 5000);
-    return () => clearTimeout(tm);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [i, s?.id]);
 
+  const next = () => (i < stories.length - 1 ? setI(i + 1) : onDone());
   if (!s) return null;
   async function del() {
     const { error } = await supabase.from("stories").delete().eq("id", s!.id);
@@ -653,7 +652,7 @@ function StoryViewer({ me, name, stories, onClose, onDone }: { me: Me; name: str
       <div className="flex gap-1 p-2">
         {stories.map((x, k) => (
           <span key={x.id} className="h-1 flex-1 overflow-hidden rounded-full bg-primary-foreground/30">
-            <span className={`block h-full bg-primary-foreground ${k < i ? "w-full" : k === i ? "fp-story-bar" : "w-0"}`} />
+            <span className={`block h-full bg-primary-foreground ${k < i ? "w-full" : k === i ? "w-1/2" : "w-0"}`} />
           </span>
         ))}
       </div>
@@ -669,10 +668,14 @@ function StoryViewer({ me, name, stories, onClose, onDone }: { me: Me; name: str
         <button aria-label="Close" onClick={onClose} className="rounded-full p-2"><X className="h-6 w-6" /></button>
       </div>
       <div className="relative flex flex-1 flex-col items-center justify-center gap-4 p-6">
-        {url && <img src={url} alt="" className="max-h-[60vh] rounded-2xl object-contain" />}
+        {url && (/\.(mp4|webm|mov|m4v)$/i.test(s.media_path ?? "")
+          ? <video key={url} src={url} autoPlay playsInline onEnded={next} className="relative z-10 max-h-[60vh] rounded-2xl" />
+          : /\.(mp3|m4a|ogg|wav|aac)$/i.test(s.media_path ?? "")
+          ? <audio key={url} src={url} autoPlay controls onEnded={next} className="relative z-10 w-full" />
+          : <img src={url} alt="" className="max-h-[60vh] rounded-2xl object-contain" />)}
         {s.caption && <p className="text-center text-2xl font-extrabold">{s.caption}</p>}
         <button aria-label="Previous" className="absolute inset-y-0 left-0 w-1/3" onClick={() => i > 0 && setI(i - 1)} />
-        <button aria-label="Next" className="absolute inset-y-0 right-0 w-1/3" onClick={() => (i < stories.length - 1 ? setI(i + 1) : onClose())} />
+        <button aria-label="Next" className="absolute inset-y-0 right-0 w-1/3" onClick={next} />
       </div>
     </div>
   );

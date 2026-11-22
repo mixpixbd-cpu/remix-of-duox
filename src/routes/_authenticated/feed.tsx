@@ -8,6 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchMe, fetchPairs } from "@/lib/fp";
 import { FEED_CATS, kindOf, wishText, type FeedCat, type FeedItem } from "@/lib/feed";
 import { moderateFeedItem } from "@/lib/feed.functions";
+import { useT } from "@/lib/i18n";
+
+let LANG = "en";
+const L = (en: string, bn: string) => (LANG === "bn" ? bn : en);
 
 export const Route = createFileRoute("/_authenticated/feed")({
   head: () => ({
@@ -24,7 +28,7 @@ export const Route = createFileRoute("/_authenticated/feed")({
 });
 
 const RELAX_PRESETS: { label: string; mins: number | null }[] = [
-  { label: "৩০ মিনিট", mins: 30 }, { label: "১ ঘণ্টা", mins: 60 }, { label: "৩ ঘণ্টা", mins: 180 }, { label: "আনলিমিটেড", mins: null },
+  { label: L("30 min", "৩০ মিনিট"), mins: 30 }, { label: L("1 hour", "১ ঘণ্টা"), mins: 60 }, { label: L("3 hours", "৩ ঘণ্টা"), mins: 180 }, { label: L("Unlimited", "আনলিমিটেড"), mins: null },
 ];
 
 function useSigned(path: string | null) {
@@ -49,6 +53,7 @@ async function posterOf(file: File): Promise<Blob | null> {
 }
 
 function Feed() {
+  LANG = useT().lang;
   const navigate = useNavigate();
   const qc = useQueryClient();
   const moderate = useServerFn(moderateFeedItem);
@@ -76,14 +81,14 @@ function Feed() {
     const next = { ...settings, g_feed_relax: mins !== false, t_feedrelax: mins === false || mins === null ? { mode: "unlimited" } : { mode: "until", until: new Date(Date.now() + mins * 60000).toISOString() } };
     const { error } = await supabase.from("pair_controls").upsert({ pair_id: pair.id, settings: next as never });
     if (error) { toast.error(error.message); return; }
-    toast.success(mins === false ? "শালীনতা ফিল্টার আবার চালু" : "ফিল্টার শিথিল করা হলো");
+    toast.success(mins === false ? L("Decency filter back on", "শালীনতা ফিল্টার আবার চালু") : L("Filter relaxed", "ফিল্টার শিথিল করা হলো"));
     qc.invalidateQueries({ queryKey: ["pairs"] });
   }
 
   async function upload(file: File) {
     if (!pair || !me.data) return;
     const kind = kindOf(file.type);
-    if (!kind) { toast.error("শুধু ছবি, ভিডিও বা অডিও দেওয়া যাবে"); return; }
+    if (!kind) { toast.error(L("Only photos, videos or audio allowed", "শুধু ছবি, ভিডিও বা অডিও দেওয়া যাবে")); return; }
     setBusy(true);
     try {
       const base = `${pair.id}/feed/${crypto.randomUUID()}`;
@@ -95,12 +100,12 @@ function Feed() {
         const b = await posterOf(file);
         if (b) { poster = `${base}-poster.jpg`; await supabase.storage.from("fixedpair-files").upload(poster, b, { contentType: "image/jpeg" }); }
       }
-      const title = window.prompt("শিরোনাম (ঐচ্ছিক)") ?? "";
+      const title = window.prompt(L("Title (optional)", "শিরোনাম (ঐচ্ছিক)")) ?? "";
       const { data, error } = await supabase.from("feed_items").insert({ pair_id: pair.id, added_by: me.data.id, category: cat === "all" ? "fun" : cat, kind, title: title || null, file_path: path, file_type: file.type, poster_path: poster }).select("id").single();
       if (error) throw error;
-      toast("এআই শালীনতা যাচাই চলছে…");
+      toast(L("Checking content safety…", "এআই শালীনতা যাচাই চলছে…"));
       const verdict = await moderate({ data: { id: data.id } });
-      toast[verdict === "safe" ? "success" : "error"](verdict === "safe" ? "নিরাপদ — যোগ হয়েছে" : verdict === "blocked" ? "আপত্তিকর মনে হয়েছে — পার্টনার দেখবে না" : "যাচাই পরে আবার হবে");
+      toast[verdict === "safe" ? "success" : "error"](verdict === "safe" ? L("Safe — added", "নিরাপদ — যোগ হয়েছে") : verdict === "blocked" ? L("Flagged — partner won't see it", "আপত্তিকর মনে হয়েছে — পার্টনার দেখবে না") : L("Will re-check later", "যাচাই পরে আবার হবে"));
       qc.invalidateQueries({ queryKey: ["feed"] });
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
@@ -112,10 +117,10 @@ function Feed() {
     if (cp.error) { toast.error(cp.error.message); return; }
     const { error } = await supabase.from("messages").insert({
       pair_id: pair.id, sender_id: me.data.id, file_path, file_type: it.file_type, file_name: it.file_path.split("/").pop() ?? null,
-      body: wish ? wishText(it.title, it.category) : it.title,
+      body: wish ? wishText(it.title, it.category, LANG) : it.title,
     });
     if (error) { toast.error(error.message); return; }
-    toast.success(wish ? "আবদার চ্যাটে পাঠানো হলো ❤️" : "চ্যাটে পাঠানো হলো");
+    toast.success(wish ? L("Wish sent to chat ❤️", "আবদার চ্যাটে পাঠানো হলো ❤️") : L("Sent to chat", "চ্যাটে পাঠানো হলো"));
   }
 
   async function remove(it: FeedItem) {
@@ -132,7 +137,7 @@ function Feed() {
       <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-2">
         <button aria-label="Back" onClick={() => navigate({ to: "/home" })} className="rounded-full p-2 text-primary"><ArrowLeft className="h-5 w-5" /></button>
         <h1 className="flex-1 text-ui font-semibold">Explore</h1>
-        {pair && <button aria-label="যোগ করুন" disabled={busy} onClick={() => fileRef.current?.click()} className="rounded-full p-2 text-primary disabled:opacity-40"><Upload className="h-5 w-5" /></button>}
+        {pair && <button aria-label=L("Add", "যোগ করুন") disabled={busy} onClick={() => fileRef.current?.click()} className="rounded-full p-2 text-primary disabled:opacity-40"><Upload className="h-5 w-5" /></button>}
         <input ref={fileRef} type="file" accept="image/*,video/*,audio/*" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) upload(f); }} />
       </header>
       <nav className="flex shrink-0 gap-2 overflow-x-auto px-3 py-2">
@@ -144,13 +149,13 @@ function Feed() {
       {isOwner && pair && (
         <div className="mx-3 mb-2 flex flex-wrap items-center gap-2 rounded-xl bg-muted px-3 py-2 text-ui">
           {relaxed ? <ShieldOff className="h-4 w-4 text-destructive" /> : <ShieldCheck className="h-4 w-4 text-primary" />}
-          <span className="flex-1">{relaxed ? "ফিল্টার শিথিল" : "শালীনতা ফিল্টার চালু"}</span>
-          {relaxed ? <button onClick={() => setRelax(false)} className="rounded-full bg-primary px-3 py-1 text-primary-foreground">আবার চালু</button>
+          <span className="flex-1">{relaxed ? L("Filter relaxed", "ফিল্টার শিথিল") : L("Decency filter on", "শালীনতা ফিল্টার চালু")}</span>
+          {relaxed ? <button onClick={() => setRelax(false)} className="rounded-full bg-primary px-3 py-1 text-primary-foreground">{L("Turn back on", "আবার চালু")}</button>
             : RELAX_PRESETS.map((p) => <button key={p.label} onClick={() => setRelax(p.mins)} className="rounded-full bg-background px-2.5 py-1">{p.label}</button>)}
         </div>
       )}
-      {!pair && <p className="p-6 text-center text-ui text-muted-foreground">{pairs.isLoading ? "লোড হচ্ছে…" : "আগে একজন পার্টনার যুক্ত করুন"}</p>}
-      {pair && items.data?.length === 0 && <p className="p-6 text-center text-ui text-muted-foreground">এখনো কিছু নেই — উপরের ⬆ বাটনে যোগ করুন</p>}
+      {!pair && <p className="p-6 text-center text-ui text-muted-foreground">{pairs.isLoading ? L("Loading…", "লোড হচ্ছে…") : L("Add a partner first", "আগে একজন পার্টনার যুক্ত করুন")}</p>}
+      {pair && items.data?.length === 0 && <p className="p-6 text-center text-ui text-muted-foreground">{L("Nothing yet — tap ⬆ above to add", "এখনো কিছু নেই — উপরের ⬆ বাটনে যোগ করুন")}</p>}
       <div className={reels ? "min-h-0 flex-1 snap-y snap-mandatory overflow-y-auto" : "grid min-h-0 flex-1 auto-rows-max grid-cols-2 gap-2 overflow-y-auto p-3"}>
         {items.data?.map((it) => (
           <Card key={it.id} it={it} reel={reels} muted={muted} onMute={() => setMuted((m) => !m)} onOpen={() => setBook(items.data!.indexOf(it))} owner={!!isOwner} onWish={() => sendToChat(it, true)} onShare={() => sendToChat(it, false)} onDelete={() => remove(it)} />
@@ -172,17 +177,17 @@ function Book({ items, start, onClose, onWish, onShare }: { items: FeedItem[]; s
     <div className="fixed inset-0 z-50 flex flex-col bg-foreground">
       <div className="flex items-center justify-between p-3 text-background">
         <span className="text-ui">{i + 1} / {items.length}</span>
-        <button aria-label="বন্ধ" onClick={onClose} className="rounded-full bg-background/20 p-2"><X className="h-5 w-5" /></button>
+        <button aria-label=L("Close", "বন্ধ") onClick={onClose} className="rounded-full bg-background/20 p-2"><X className="h-5 w-5" /></button>
       </div>
       <div ref={ref} onScroll={(e) => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))} className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto">
         {items.map((it) => <Page key={it.id} it={it} />)}
       </div>
       <div className="flex items-center gap-2 bg-background px-3 py-3">
-        <button aria-label="আগের" onClick={() => go(-1)} className="rounded-full bg-muted p-2"><ChevronLeft className="h-5 w-5" /></button>
+        <button aria-label=L("Previous", "আগের") onClick={() => go(-1)} className="rounded-full bg-muted p-2"><ChevronLeft className="h-5 w-5" /></button>
         <p className="min-w-0 flex-1 truncate text-center text-ui">{cur?.title}</p>
-        {cur && <button onClick={() => onWish(cur)} className="flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-ui text-primary-foreground"><Heart className="h-4 w-4 fill-current" />আমার পছন্দ</button>}
-        {cur && <button aria-label="চ্যাটে পাঠান" onClick={() => onShare(cur)} className="rounded-full bg-muted p-2 text-primary"><Send className="h-4 w-4" /></button>}
-        <button aria-label="পরের" onClick={() => go(1)} className="rounded-full bg-muted p-2"><ChevronRight className="h-5 w-5" /></button>
+        {cur && <button onClick={() => onWish(cur)} className="flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-ui text-primary-foreground"><Heart className="h-4 w-4 fill-current" />{L("Wish", "আমার পছন্দ")}</button>}
+        {cur && <button aria-label=L("Send to chat", "চ্যাটে পাঠান") onClick={() => onShare(cur)} className="rounded-full bg-muted p-2 text-primary"><Send className="h-4 w-4" /></button>}
+        <button aria-label=L("Next", "পরের") onClick={() => go(1)} className="rounded-full bg-muted p-2"><ChevronRight className="h-5 w-5" /></button>
       </div>
     </div>
   );
@@ -210,18 +215,18 @@ function Card({ it, reel, muted, onMute, onOpen, owner, onWish, onShare, onDelet
     : it.kind === "image" ? <img src={url} alt={it.title ?? ""} onClick={reel ? undefined : onOpen} className={reel ? "h-full w-full object-contain" : "aspect-[3/4] w-full cursor-zoom-in rounded-xl object-cover"} />
     : it.kind === "video" ? <video ref={vref} src={url} playsInline loop muted={reel && muted} controls={!reel} onClick={(e) => { const v = e.currentTarget; v.paused ? v.play() : v.pause(); }} className={reel ? "h-full w-full object-contain" : "aspect-[3/4] w-full rounded-xl object-cover"} />
     : <div className="flex aspect-[3/4] w-full flex-col items-center justify-center gap-3 rounded-xl bg-muted p-3"><span className="text-4xl">🎧</span><audio src={url} controls className="w-full" /></div>;
-  const badge = it.status !== "safe" && owner ? <span className="absolute left-2 top-2 rounded-full bg-background/90 px-2 py-0.5 text-ui">{it.status === "blocked" ? "🚫 আটকানো" : "⏳ যাচাই"}</span> : null;
+  const badge = it.status !== "safe" && owner ? <span className="absolute left-2 top-2 rounded-full bg-background/90 px-2 py-0.5 text-ui">{it.status === "blocked" ? L("🚫 Blocked", "🚫 আটকানো") : L("⏳ Reviewing", "⏳ যাচাই")}</span> : null;
   const actions = (
     <div className="flex items-center gap-1">
-      <button aria-label="আবদার" onClick={onWish} className="flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-ui text-primary-foreground"><Heart className="h-4 w-4 fill-current" />আবদার</button>
-      <button aria-label="চ্যাটে পাঠান" onClick={onShare} className="rounded-full bg-muted p-2 text-primary"><Send className="h-4 w-4" /></button>
-      {owner && <button aria-label="মুছুন" onClick={onDelete} className="rounded-full bg-muted p-2 text-destructive"><Trash2 className="h-4 w-4" /></button>}
+      <button aria-label=L("Wish", "আবদার") onClick={onWish} className="flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-ui text-primary-foreground"><Heart className="h-4 w-4 fill-current" />{L("Wish", "আবদার")}</button>
+      <button aria-label=L("Send to chat", "চ্যাটে পাঠান") onClick={onShare} className="rounded-full bg-muted p-2 text-primary"><Send className="h-4 w-4" /></button>
+      {owner && <button aria-label=L("Delete", "মুছুন") onClick={onDelete} className="rounded-full bg-muted p-2 text-destructive"><Trash2 className="h-4 w-4" /></button>}
     </div>
   );
   if (reel) return (
     <section className="relative h-full snap-start snap-always bg-foreground">
       {media}{badge}
-      {it.kind === "video" && <button aria-label={muted ? "সাউন্ড চালু" : "সাউন্ড বন্ধ"} onClick={onMute} className="absolute right-3 top-3 rounded-full bg-background/80 p-2">{muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}</button>}
+      {it.kind === "video" && <button aria-label={muted ? L("Sound on", "সাউন্ড চালু") : L("Sound off", "সাউন্ড বন্ধ")} onClick={onMute} className="absolute right-3 top-3 rounded-full bg-background/80 p-2">{muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}</button>}
       <div className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-foreground/80 to-transparent px-3 pb-4 pt-10"><p className="min-w-0 flex-1 truncate text-ui text-background">{it.title}</p>{actions}</div>
     </section>
   );

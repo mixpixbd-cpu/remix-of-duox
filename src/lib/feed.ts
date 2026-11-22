@@ -22,7 +22,8 @@ export function kindOf(mime: string): "image" | "video" | "audio" | null {
 }
 
 /** Chat text for the one-tap "আবদার ❤️" wish. */
-export function wishText(title: string | null, cat: string): string {
+export function wishText(title: string | null, cat: string, lang = "en"): string {
   const c = FEED_CATS.find((x) => x.key === cat);
+  if (lang !== "bn") return `❤️ My wish: ${title?.trim() || c?.en || "this"}`;
   return `❤️ আমার পছন্দ / আবদার: ${title?.trim() || c?.bn || "এটা"}`;
 }
