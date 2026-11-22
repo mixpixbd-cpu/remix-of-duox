@@ -137,7 +137,7 @@ function Feed() {
       <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-2">
         <button aria-label="Back" onClick={() => navigate({ to: "/home" })} className="rounded-full p-2 text-primary"><ArrowLeft className="h-5 w-5" /></button>
         <h1 className="flex-1 text-ui font-semibold">Explore</h1>
-        {pair && <button aria-label=L("Add", "যোগ করুন") disabled={busy} onClick={() => fileRef.current?.click()} className="rounded-full p-2 text-primary disabled:opacity-40"><Upload className="h-5 w-5" /></button>}
+        {pair && <button aria-label={L("Add", "যোগ করুন")} disabled={busy} onClick={() => fileRef.current?.click()} className="rounded-full p-2 text-primary disabled:opacity-40"><Upload className="h-5 w-5" /></button>}
         <input ref={fileRef} type="file" accept="image/*,video/*,audio/*" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) upload(f); }} />
       </header>
       <nav className="flex shrink-0 gap-2 overflow-x-auto px-3 py-2">
@@ -177,17 +177,17 @@ function Book({ items, start, onClose, onWish, onShare }: { items: FeedItem[]; s
     <div className="fixed inset-0 z-50 flex flex-col bg-foreground">
       <div className="flex items-center justify-between p-3 text-background">
         <span className="text-ui">{i + 1} / {items.length}</span>
-        <button aria-label=L("Close", "বন্ধ") onClick={onClose} className="rounded-full bg-background/20 p-2"><X className="h-5 w-5" /></button>
+        <button aria-label={L("Close", "বন্ধ")} onClick={onClose} className="rounded-full bg-background/20 p-2"><X className="h-5 w-5" /></button>
       </div>
       <div ref={ref} onScroll={(e) => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))} className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto">
         {items.map((it) => <Page key={it.id} it={it} />)}
       </div>
       <div className="flex items-center gap-2 bg-background px-3 py-3">
-        <button aria-label=L("Previous", "আগের") onClick={() => go(-1)} className="rounded-full bg-muted p-2"><ChevronLeft className="h-5 w-5" /></button>
+        <button aria-label={L("Previous", "আগের")} onClick={() => go(-1)} className="rounded-full bg-muted p-2"><ChevronLeft className="h-5 w-5" /></button>
         <p className="min-w-0 flex-1 truncate text-center text-ui">{cur?.title}</p>
         {cur && <button onClick={() => onWish(cur)} className="flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-ui text-primary-foreground"><Heart className="h-4 w-4 fill-current" />{L("Wish", "আমার পছন্দ")}</button>}
-        {cur && <button aria-label=L("Send to chat", "চ্যাটে পাঠান") onClick={() => onShare(cur)} className="rounded-full bg-muted p-2 text-primary"><Send className="h-4 w-4" /></button>}
-        <button aria-label=L("Next", "পরের") onClick={() => go(1)} className="rounded-full bg-muted p-2"><ChevronRight className="h-5 w-5" /></button>
+        {cur && <button aria-label={L("Send to chat", "চ্যাটে পাঠান")} onClick={() => onShare(cur)} className="rounded-full bg-muted p-2 text-primary"><Send className="h-4 w-4" /></button>}
+        <button aria-label={L("Next", "পরের")} onClick={() => go(1)} className="rounded-full bg-muted p-2"><ChevronRight className="h-5 w-5" /></button>
       </div>
     </div>
   );
@@ -218,9 +218,9 @@ function Card({ it, reel, muted, onMute, onOpen, owner, onWish, onShare, onDelet
   const badge = it.status !== "safe" && owner ? <span className="absolute left-2 top-2 rounded-full bg-background/90 px-2 py-0.5 text-ui">{it.status === "blocked" ? L("🚫 Blocked", "🚫 আটকানো") : L("⏳ Reviewing", "⏳ যাচাই")}</span> : null;
   const actions = (
     <div className="flex items-center gap-1">
-      <button aria-label=L("Wish", "আবদার") onClick={onWish} className="flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-ui text-primary-foreground"><Heart className="h-4 w-4 fill-current" />{L("Wish", "আবদার")}</button>
-      <button aria-label=L("Send to chat", "চ্যাটে পাঠান") onClick={onShare} className="rounded-full bg-muted p-2 text-primary"><Send className="h-4 w-4" /></button>
-      {owner && <button aria-label=L("Delete", "মুছুন") onClick={onDelete} className="rounded-full bg-muted p-2 text-destructive"><Trash2 className="h-4 w-4" /></button>}
+      <button aria-label={L("Wish", "আবদার")} onClick={onWish} className="flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-ui text-primary-foreground"><Heart className="h-4 w-4 fill-current" />{L("Wish", "আবদার")}</button>
+      <button aria-label={L("Send to chat", "চ্যাটে পাঠান")} onClick={onShare} className="rounded-full bg-muted p-2 text-primary"><Send className="h-4 w-4" /></button>
+      {owner && <button aria-label={L("Delete", "মুছুন")} onClick={onDelete} className="rounded-full bg-muted p-2 text-destructive"><Trash2 className="h-4 w-4" /></button>}
     </div>
   );
   if (reel) return (
