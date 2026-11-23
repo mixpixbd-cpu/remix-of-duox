@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Bell, BellOff, Camera, Copy, Eraser, Heart, ImagePlus, Info, MessageCircle, Phone, PhoneMissed, PhoneOutgoing, Pin, PinOff, Plus, Search, Smartphone, Trash2, UserPlus, Users, X } from "lucide-react";
+import { ArrowLeft, Bell, Compass, Images, PawPrint, Flower2, Sparkles, BellOff, Camera, Copy, Eraser, Heart, ImagePlus, Info, MessageCircle, Phone, PhoneMissed, PhoneOutgoing, Pin, PinOff, Plus, Search, Smartphone, Trash2, UserPlus, Users, X } from "lucide-react";
 import { useTypingWatch } from "@/lib/typing";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchLastMessages, fetchMe, fetchPairs, fetchStories, isOnline, presenceOf, shortTime, type Story } from "@/lib/fp";
@@ -502,13 +502,13 @@ function StoryReel({ me, pairs }: { me: Me; pairs: Pairs }) {
   const navigate = useNavigate();
   const others = authors.filter((a) => a !== me.id);
   const ring = "flex w-16 shrink-0 flex-col items-center gap-1";
-  const circle = "flex h-14 w-14 items-center justify-center rounded-full bg-muted text-2xl";
+  const circle = "flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-md ring-2 ring-background";
   const SHORTCUTS = [
-    { k: "explore", en: "Explore", bn: "এক্সপ্লোর", e: "🧭", go: () => navigate({ to: "/feed" }) },
-    { k: "memories", en: "Memories", bn: "স্মৃতি", e: "📸", go: () => navigate({ to: "/together", search: { tab: "memories" } }) },
-    { k: "pet", en: "Pet", bn: "পোষা", e: "🐱", go: () => navigate({ to: "/together", search: { tab: "pet" } }) },
-    { k: "garden", en: "Garden", bn: "বাগান", e: "🌸", go: () => navigate({ to: "/together", search: { tab: "garden" } }) },
-    { k: "camera", en: "Camera", bn: "ক্যামেরা", e: "👑", go: () => navigate({ to: "/together", search: { tab: "camera" } }) },
+    { k: "explore", en: "Explore", bn: "এক্সপ্লোর", e: Compass, go: () => navigate({ to: "/feed" }) },
+    { k: "memories", en: "Memories", bn: "স্মৃতি", e: Images, go: () => navigate({ to: "/together", search: { tab: "memories" } }) },
+    { k: "pet", en: "Pet", bn: "পোষা", e: PawPrint, go: () => navigate({ to: "/together", search: { tab: "pet" } }) },
+    { k: "garden", en: "Garden", bn: "বাগান", e: Flower2, go: () => navigate({ to: "/together", search: { tab: "garden" } }) },
+    { k: "camera", en: "Camera", bn: "ক্যামেরা", e: Sparkles, go: () => navigate({ to: "/together", search: { tab: "camera" } }) },
   ];
   const authorRing = (a: string) => (
     <button key={a} onClick={() => setViewing(a)} className={`${ring} animate-in fade-in zoom-in-75`}>
@@ -520,7 +520,7 @@ function StoryReel({ me, pairs }: { me: Me; pairs: Pairs }) {
 
   return (
     <>
-      <div className="flex gap-3 overflow-x-auto px-3 py-3">
+      <div className="flex touch-pan-x gap-3 overflow-x-auto overscroll-x-contain px-3 py-3 [scrollbar-width:none]" onTouchStart={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
         <button onClick={() => setCompose(true)} className={ring}>
           <span className="relative flex h-14 w-14 items-center justify-center rounded-full bg-muted text-foreground">
             <Camera className="h-6 w-6" />
@@ -540,7 +540,7 @@ function StoryReel({ me, pairs }: { me: Me; pairs: Pairs }) {
         ))}
         {SHORTCUTS.map((c) => (
           <button key={c.k} onClick={c.go} className={ring}>
-            <span className={circle}>{c.e}</span>
+            <span className={circle}><c.e className="h-6 w-6" strokeWidth={2.2} /></span>
             <span className="w-full truncate text-center text-ui">{bn ? c.bn : c.en}</span>
           </button>
         ))}
